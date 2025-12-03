@@ -34,6 +34,14 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
     public var lastAvPlayerTimeControlStatus: AVPlayer.TimeControlStatus? = nil
 
     private var pipController: AVPictureInPictureController?
+    private var pipRequiresLinearPlayback: Bool = false
+    public func setPictureInPictureRequiresLinearPlayback(_ requiresLinearPlayback: Bool) {
+        pipRequiresLinearPlayback = requiresLinearPlayback
+        if #available(iOS 14.0, *) {
+            pipController?.requiresLinearPlayback = requiresLinearPlayback
+        }
+    }
+
     private var restoreUIOnPipStop: ((Bool) -> Void)?
 
     public override init() {
@@ -474,6 +482,9 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
             UIApplication.shared.beginReceivingRemoteControlEvents()
             if pipController == nil, let layer = playerLayerRef, AVPictureInPictureController.isPictureInPictureSupported() {
                 pipController = AVPictureInPictureController(playerLayer: layer)
+                if #available(iOS 14.0, *) {
+                    pipController?.requiresLinearPlayback = pipRequiresLinearPlayback
+                }
                 pipController?.delegate = self
             }
         }

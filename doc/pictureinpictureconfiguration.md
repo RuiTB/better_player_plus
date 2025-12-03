@@ -41,6 +41,11 @@ PiP menu item is enabled as default in both Material and Cuperino controls. You 
 `BetterPlayerControlsConfiguration`'s variable: `enablePip`. You can change PiP control menu icon with
 `pipMenuIcon` variable in `BetterPlayerControlsConfiguration`.
 
+### iOS linear playback controls
+By default iOS 14+ PiP uses the standard system transport controls (`pipRequiresLinearPlayback = false`). Set
+`BetterPlayerConfiguration(pipRequiresLinearPlayback: true)` to restrict the PiP UI to linear playback only
+when your content requires stricter control.
+
 Warning:
 Both Android and iOS PiP versions are in very early stage. There can be bugs and small issues. Please
 make sure that you've checked state of the PiP in Better Player before moving it to the production.

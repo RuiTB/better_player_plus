@@ -41,6 +41,7 @@ class BetterPlayerConfiguration {
     this.autoDispose = true,
     this.expandToFill = true,
     this.useRootNavigator = false,
+    this.pipRequiresLinearPlayback = false,
   });
 
   /// Play the video as soon as it's displayed
@@ -154,6 +155,10 @@ class BetterPlayerConfiguration {
   ///Default value is false.
   final bool useRootNavigator;
 
+  ///Flag which controls whether PiP should require linear playback on iOS 14+.
+  ///When true (default), system transport controls for PiP are limited.
+  final bool pipRequiresLinearPlayback;
+
   BetterPlayerConfiguration copyWith({
     double? aspectRatio,
     bool? autoPlay,
@@ -184,6 +189,7 @@ class BetterPlayerConfiguration {
     bool? autoDispose,
     bool? expandToFill,
     bool? useRootNavigator,
+    bool? pipRequiresLinearPlayback,
   }) => BetterPlayerConfiguration(
     aspectRatio: aspectRatio ?? this.aspectRatio,
     autoPlay: autoPlay ?? this.autoPlay,
@@ -214,5 +220,6 @@ class BetterPlayerConfiguration {
     autoDispose: autoDispose ?? this.autoDispose,
     expandToFill: expandToFill ?? this.expandToFill,
     useRootNavigator: useRootNavigator ?? this.useRootNavigator,
+    pipRequiresLinearPlayback: pipRequiresLinearPlayback ?? this.pipRequiresLinearPlayback,
   );
 }

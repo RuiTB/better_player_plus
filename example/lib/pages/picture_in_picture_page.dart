@@ -1,6 +1,6 @@
-import 'package:better_player_example/constants.dart';
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PictureInPicturePage extends StatefulWidget {
   const PictureInPicturePage({super.key});
@@ -15,13 +15,36 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
 
   @override
   void initState() {
-    const BetterPlayerConfiguration betterPlayerConfiguration = BetterPlayerConfiguration(
+    BetterPlayerConfiguration betterPlayerConfiguration = BetterPlayerConfiguration(
       aspectRatio: 16 / 9,
       fit: BoxFit.contain,
+      pipRequiresLinearPlayback: true,
+      eventListener: (BetterPlayerEvent event) {
+        if (event.betterPlayerEventType == BetterPlayerEventType.initialized) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await Future.delayed(const Duration(seconds: 1));
+            _betterPlayerController.setTrack(_betterPlayerController.betterPlayerAsmsTracks[1]);
+          });
+        }
+      },
+      fullScreenByDefault: true,
+      deviceOrientationsAfterFullScreen: [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ],
+      deviceOrientationsOnFullScreen: [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ],
+      autoPlay: true,
     );
     final BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
-      Constants.elephantDreamVideoUrl,
+      'https://dy35qflylzlrr.cloudfront.net/course-videos/1ca87b1a-def5-41ec-ae3c-2eaf18ac69be/AppleHLS1/b20fdefa-6622-41ca-9a3f-d0680f47b518.m3u8',
     );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);

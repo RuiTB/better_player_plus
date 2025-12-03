@@ -291,6 +291,8 @@ extension SwiftBetterPlayerPlugin {
             let top = (argsMap["top"] as? NSNumber)?.doubleValue ?? 0
             let width = (argsMap["width"] as? NSNumber)?.doubleValue ?? 0
             let height = (argsMap["height"] as? NSNumber)?.doubleValue ?? 0
+            let requiresLinearPlayback = (argsMap["requiresLinearPlayback"] as? NSNumber)?.boolValue ?? false
+            player.setPictureInPictureRequiresLinearPlayback(requiresLinearPlayback)
             player.enablePictureInPicture(CGRect(x: left, y: top, width: width, height: height))
             result(nil)
         case "isPictureInPictureSupported":

@@ -135,8 +135,9 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('getAbsolutePosition() has not been implemented.');
   }
 
-  ///Enables PiP mode.
-  Future<void> enablePictureInPicture(int? textureId, double? top, double? left, double? width, double? height) {
+  ///Enables PiP mode. When [requiresLinearPlayback] is true, iOS 14+ limits transport controls.
+  Future<void> enablePictureInPicture(
+      int? textureId, double? top, double? left, double? width, double? height, bool? requiresLinearPlayback) {
     throw UnimplementedError('enablePictureInPicture() has not been implemented.');
   }
 

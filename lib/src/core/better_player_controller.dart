@@ -1003,12 +1003,19 @@ class BetterPlayerController {
     final bool isPipSupported = (await videoPlayerController!.isPictureInPictureSupported()) ?? false;
 
     if (isPipSupported) {
+      final bool requiresLinearPlayback = betterPlayerConfiguration.pipRequiresLinearPlayback;
       _wasInFullScreenBeforePiP = _isFullScreen;
       _wasControlsEnabledBeforePiP = _controlsEnabled;
       setControlsEnabled(false);
       if (Platform.isAndroid) {
         _wasInFullScreenBeforePiP = _isFullScreen;
-        await videoPlayerController?.enablePictureInPicture(left: 0, top: 0, width: 0, height: 0);
+        await videoPlayerController?.enablePictureInPicture(
+          left: 0,
+          top: 0,
+          width: 0,
+          height: 0,
+          requiresLinearPlayback: requiresLinearPlayback,
+        );
         enterFullScreen();
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStart));
         return;
@@ -1028,6 +1035,7 @@ class BetterPlayerController {
           top: position.dy,
           width: renderBox.size.width,
           height: renderBox.size.height,
+          requiresLinearPlayback: requiresLinearPlayback,
         );
       } else {
         BetterPlayerUtils.log('Unsupported PiP in current platform.');

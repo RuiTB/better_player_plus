@@ -153,13 +153,21 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> enablePictureInPicture(int? textureId, double? top, double? left, double? width, double? height) async =>
+  Future<void> enablePictureInPicture(
+    int? textureId,
+    double? top,
+    double? left,
+    double? width,
+    double? height,
+    bool? requiresLinearPlayback,
+  ) async =>
       _channel.invokeMethod<void>('enablePictureInPicture', <String, dynamic>{
         'textureId': textureId,
         'top': top,
         'left': left,
         'width': width,
         'height': height,
+        'requiresLinearPlayback': requiresLinearPlayback,
       });
 
   @override
