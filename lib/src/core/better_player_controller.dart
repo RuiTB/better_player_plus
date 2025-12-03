@@ -1057,6 +1057,19 @@ class BetterPlayerController {
     return videoPlayerController!.disablePictureInPicture();
   }
 
+  ///Opens the dedicated Android PiP Activity that renders Better Player in a separate task.
+  ///Has no effect on platforms other than Android.
+  Future<void> showPictureInPictureScreen() async {
+    if (videoPlayerController == null) {
+      throw StateError('The data source has not been initialized');
+    }
+    if (!Platform.isAndroid) {
+      BetterPlayerUtils.log('Android PiP screen is only available on Android devices.');
+      return;
+    }
+    await videoPlayerController!.showPictureInPictureScreen();
+  }
+
   // ignore: use_setters_to_change_properties
   ///Set GlobalKey of BetterPlayer. Used in PiP methods called from controls.
   void setBetterPlayerGlobalKey(GlobalKey betterPlayerGlobalKey) {

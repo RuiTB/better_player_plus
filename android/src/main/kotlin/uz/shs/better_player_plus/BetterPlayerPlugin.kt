@@ -6,6 +6,7 @@ package uz.shs.better_player_plus
 import android.app.Activity
 import android.app.PictureInPictureParams
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
@@ -16,6 +17,7 @@ import android.util.Rational
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import uz.shs.better_player_plus.BetterPlayerCache.releaseCache
+import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -133,6 +135,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             PRE_CACHE_METHOD -> preCache(call, result)
             STOP_PRE_CACHE_METHOD -> stopPreCache(call, result)
             CLEAR_CACHE_METHOD -> clearCache(result)
+            SHOW_PICTURE_IN_PICTURE_SCREEN_METHOD -> showBetterPlayerPipScreen(result)
             else -> {
                 if (call.argument<Any>(TEXTURE_ID_PARAMETER) == null) {
 //                    result.error(
@@ -324,6 +327,37 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 cacheKey,
                 clearKey
             )
+        }
+    }
+
+    private fun showBetterPlayerPipScreen(result: MethodChannel.Result) {
+        val hostActivity = activity
+        if (hostActivity == null) {
+            result.error("no_activity", "better_player plugin requires a foreground activity", null)
+            return
+        }
+        if (!isPictureInPictureSupported()) {
+            result.error("pip_not_supported", "Picture in Picture is not supported on this device.", null)
+            return
+        }
+        val cachedEngine = FlutterEngineCache.getInstance().get(PIP_ENGINE_CACHE_KEY)
+        if (cachedEngine == null) {
+            result.error(
+                "pip_engine_not_found",
+                "No cached FlutterEngine found for key $PIP_ENGINE_CACHE_KEY. Initialize it in your Android host app.",
+                null
+            )
+            return
+        }
+        try {
+            val intent = Intent(hostActivity, BetterPlayerPIPScreen::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            hostActivity.startActivity(intent)
+            result.success(null)
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed to launch BetterPlayer PiP screen", exception)
+            result.error("pip_launch_failed", exception.message, null)
         }
     }
 
@@ -586,5 +620,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         private const val DISPOSE_METHOD = "dispose"
         private const val PRE_CACHE_METHOD = "preCache"
         private const val STOP_PRE_CACHE_METHOD = "stopPreCache"
+        private const val SHOW_PICTURE_IN_PICTURE_SCREEN_METHOD = "showPictureInPictureScreen"
+        private const val PIP_ENGINE_CACHE_KEY = BetterPlayerPIPScreen.PIP_ENGINE_CACHE_KEY
     }
 }

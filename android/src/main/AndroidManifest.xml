@@ -1,1 +1,16 @@
-<manifest package="uz.shs.better_player_plus" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="uz.shs.better_player_plus">
+
+    <application>
+        <!-- Better Player PiP Screen Activity -->
+        <activity
+            android:name=".BetterPlayerPIPScreen"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:windowSoftInputMode="adjustResize" />
+    </application>
+
+</manifest>

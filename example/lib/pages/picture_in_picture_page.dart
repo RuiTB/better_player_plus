@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,11 +22,8 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
       fit: BoxFit.contain,
       pipRequiresLinearPlayback: true,
       eventListener: (BetterPlayerEvent event) {
-        if (event.betterPlayerEventType == BetterPlayerEventType.initialized) {
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await Future.delayed(const Duration(seconds: 1));
-            _betterPlayerController.setTrack(_betterPlayerController.betterPlayerAsmsTracks[1]);
-          });
+        if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
+          print('progress: ${event.parameters?['progress']}');
         }
       },
       fullScreenByDefault: true,
@@ -85,6 +84,13 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
             _betterPlayerController.disablePictureInPicture();
           },
         ),
+        if (Platform.isAndroid)
+          ElevatedButton(
+            child: const Text('Open dedicated PiP screen (Android)'),
+            onPressed: () {
+              _betterPlayerController.showPictureInPictureScreen();
+            },
+          ),
       ],
     ),
   );

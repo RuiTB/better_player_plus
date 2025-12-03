@@ -569,6 +569,15 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.disablePictureInPicture(textureId);
   }
 
+  /// Launches the dedicated Android PiP Activity that runs on a cached Flutter engine.
+  /// No-op on non-Android platforms.
+  Future<void> showPictureInPictureScreen() async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    await _videoPlayerPlatform.showPictureInPictureScreen();
+  }
+
   void _updatePosition(Duration? position, {DateTime? absolutePosition}) {
     value = value.copyWith(position: _seekPosition ?? position);
     if (_seekPosition == null) {

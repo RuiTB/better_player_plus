@@ -1,3 +1,10 @@
+## 1.1.6
+
+* Added dedicated Android PiP Activity backed by a cached Flutter engine
+* Exposed `BetterPlayerController.showPictureInPictureScreen()` to launch the PiP Activity
+* Updated example app with `pipMain` entry-point, cached engine setup, and PiP demo UI
+* Documented the new Android PiP workflow and bumped plugin version
+
 ## 1.1.5
 
 * Added iOS support for `BetterPlayerBufferingConfiguration` (forward buffer limit)

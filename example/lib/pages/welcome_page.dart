@@ -141,7 +141,7 @@ class _WelcomePageState extends State<WelcomePage> {
       _navigateToPage(const OverriddenDurationPage());
     }),
     _buildExampleElementWidget('Picture in Picture', () {
-      _navigateToPage(const PictureInPicturePage());
+      _openPictureInPictureExample();
     }),
     _buildExampleElementWidget('Controls always visible', () {
       _navigateToPage(const ControlsAlwaysVisiblePage());
@@ -175,6 +175,24 @@ class _WelcomePageState extends State<WelcomePage> {
 
   Future<void> _navigateToPage(Widget routeWidget) =>
       Navigator.push(context, MaterialPageRoute(builder: (context) => routeWidget));
+
+  Future<void> _openPictureInPictureExample() async {
+    if (!Platform.isAndroid) {
+      await _navigateToPage(const PictureInPicturePage());
+      return;
+    }
+    const channel = MethodChannel('better_player_channel');
+    try {
+      await channel.invokeMethod('showPictureInPictureScreen');
+    } on PlatformException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message ?? 'Unable to launch Picture in Picture screen.')));
+    }
+  }
 
   ///Save subtitles to file, so we can use it later
   Future<void> _saveAssetSubtitleToFile() async {

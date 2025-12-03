@@ -37,6 +37,34 @@ To hide PiP mode call this method:
 betterPlayerController.disablePictureInPicture();
 ```
 
+### Android PiP screen running in a separate Activity
+
+Better Player also exposes an Android-only helper that launches a dedicated FlutterActivity backed by a
+cached FlutterEngine. This keeps your primary app task alive while the user interacts with the PiP UI.
+
+1. **Create a PiP entry-point** inside your Flutter app (see `example/lib/main.dart` for a full sample):
+   ```dart
+   @pragma('vm:entry-point')
+   void pipMain() {
+     WidgetsFlutterBinding.ensureInitialized();
+     runApp(const BetterPlayerPipApp());
+   }
+   ```
+2. **Preload and cache a FlutterEngine** from your Android `MainActivity` and point it to the `pipMain`
+   entry-point:
+   ```kotlin
+   val pipEngine = FlutterEngine(this)
+   val flutterLoader = FlutterInjector.instance().flutterLoader()
+   pipEngine.dartExecutor.executeDartEntrypoint(
+       DartExecutor.DartEntrypoint(flutterLoader.findAppBundlePath(), "pipMain")
+   )
+   FlutterEngineCache.getInstance().put("better_player_pip_engine", pipEngine)
+   ```
+3. **Launch the PiP screen** from Dart whenever you need to show it:
+   ```dart
+   await betterPlayerController.showPictureInPictureScreen();
+   ```
+
 PiP menu item is enabled as default in both Material and Cuperino controls. You can disable it with
 `BetterPlayerControlsConfiguration`'s variable: `enablePip`. You can change PiP control menu icon with
 `pipMenuIcon` variable in `BetterPlayerControlsConfiguration`.

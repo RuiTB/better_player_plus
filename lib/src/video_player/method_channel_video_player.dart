@@ -179,6 +179,10 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
       _channel.invokeMethod<bool>('disablePictureInPicture', <String, dynamic>{'textureId': textureId});
 
   @override
+  Future<void> showPictureInPictureScreen() =>
+      _channel.invokeMethod<void>('showPictureInPictureScreen');
+
+  @override
   Future<void> setAudioTrack(int? textureId, String? name, int? index) => _channel.invokeMethod<void>(
     'setAudioTrack',
     <String, dynamic>{'textureId': textureId, 'name': name, 'index': index},

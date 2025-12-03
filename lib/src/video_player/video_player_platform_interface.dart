@@ -150,6 +150,11 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('isPictureInPictureEnabled() has not been implemented.');
   }
 
+  ///Launches the dedicated Android PiP Activity that renders content with a cached Flutter engine.
+  Future<void> showPictureInPictureScreen() {
+    throw UnimplementedError('showPictureInPictureScreen() has not been implemented.');
+  }
+
   Future<void> setAudioTrack(int? textureId, String? name, int? index) {
     throw UnimplementedError('setAudio() has not been implemented.');
   }
