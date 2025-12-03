@@ -1,5 +1,5 @@
 ///Configuration class used to setup better buffering experience or setup custom
-///load settings. Currently used only in Android.
+///load settings. Supported on Android and used to constrain forward buffering on iOS.
 class BetterPlayerBufferingConfiguration {
   const BetterPlayerBufferingConfiguration({
     this.minBufferMs = defaultMinBufferMs,

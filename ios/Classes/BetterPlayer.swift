@@ -32,6 +32,7 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
     public var playerRate: Float = 1.0
     public var overriddenDuration: Int = 0
     public var lastAvPlayerTimeControlStatus: AVPlayer.TimeControlStatus? = nil
+    private let bufferingConfiguration: BetterPlayerBufferingConfiguration?
 
     private var pipController: AVPictureInPictureController?
     private var pipRequiresLinearPlayback: Bool = false
@@ -44,7 +45,12 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
 
     private var restoreUIOnPipStop: ((Bool) -> Void)?
 
-    public override init() {
+    public init(bufferingConfiguration: BetterPlayerBufferingConfiguration? = nil) {
+        if let configuration = bufferingConfiguration, configuration.isCustomized {
+            self.bufferingConfiguration = configuration
+        } else {
+            self.bufferingConfiguration = nil
+        }
         self.player = AVPlayer()
         super.init()
         self.player.actionAtItemEnd = .none
@@ -58,7 +64,7 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
     }
 
     public convenience init(frame: CGRect) {
-        self.init()
+        self.init(bufferingConfiguration: nil)
     }
 
     public func view() -> UIView {
@@ -201,6 +207,7 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
         self.isStalledCheckStarted = false
         self.playerRate = 1
         player.replaceCurrentItem(with: item)
+        applyBufferingConfiguration(item)
 
         let asset = item.asset
         asset.loadValuesAsynchronously(forKeys: ["tracks"]) {
@@ -219,6 +226,15 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
             }
         }
         addObservers(item)
+    }
+
+    private func applyBufferingConfiguration(_ item: AVPlayerItem) {
+        guard let configuration = bufferingConfiguration else { return }
+        guard #available(iOS 10.0, *) else { return }
+        let maxBufferSeconds = Double(configuration.maxBufferMs) / 1000.0
+        if maxBufferSeconds > 0 {
+            item.preferredForwardBufferDuration = maxBufferSeconds
+        }
     }
 
     private func handleStalled() {

@@ -1,5 +1,5 @@
 ## Buffering configuration
-Buffering of the video can be configurd with `BetterPlayerBufferingConfiguration` class. It allows to setup better buffering experience or setup custom load settings. Currently available only in Android.
+Buffering of the video can be configurd with `BetterPlayerBufferingConfiguration` class. It allows to setup better buffering experience or setup custom load settings. Android supports the full set of parameters, while iOS currently applies the configuration to the forward buffering window (limiting how much content is prefetched into memory).
 
 
 `BetterPlayerBufferingConfiguration` should be used within `BetterPlayerDataSource`:

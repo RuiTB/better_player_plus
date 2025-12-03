@@ -209,7 +209,9 @@ extension SwiftBetterPlayerPlugin {
             return
         }
         if call.method == "create" {
-            let player = BetterPlayer(frame: .zero)
+            let configurationArgs = call.arguments as? [String: Any]
+            let bufferingConfiguration = BetterPlayerBufferingConfiguration(dictionary: configurationArgs)
+            let player = BetterPlayer(bufferingConfiguration: bufferingConfiguration)
             onPlayerSetup(player, result: result)
             return
         }

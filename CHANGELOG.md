@@ -1,5 +1,6 @@
 ## 1.1.5
 
+* Added iOS support for `BetterPlayerBufferingConfiguration` (forward buffer limit)
 * Fixed error in WebVTT file parser for subtitle handling
 * Fixed issue where 'hideFullscreen' event was not fired when exiting fullscreen mode
 * Improved subtitle parsing reliability and error handling

@@ -45,6 +45,13 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
     final BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       'https://dy35qflylzlrr.cloudfront.net/course-videos/1ca87b1a-def5-41ec-ae3c-2eaf18ac69be/AppleHLS1/b20fdefa-6622-41ca-9a3f-d0680f47b518.m3u8',
+      cacheConfiguration: BetterPlayerCacheConfiguration(useCache: false),
+      bufferingConfiguration: BetterPlayerBufferingConfiguration(
+        minBufferMs: 5000,
+        maxBufferMs: 5000,
+        bufferForPlaybackMs: 2000,
+        bufferForPlaybackAfterRebufferMs: 3000,
+      ),
     );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
