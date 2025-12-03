@@ -37,6 +37,8 @@ To hide PiP mode call this method:
 betterPlayerController.disablePictureInPicture();
 ```
 
+On Android the PiP window now automatically exposes a system-level **Play / Pause** button, allowing users to control playback without returning to the main player UI. No additional setup is required beyond calling the methods above, and PiP button presses emit `BetterPlayerEventType.play`/`pause` events so Flutter-side listeners stay in sync.
+
 ### Android PiP screen running in a separate Activity
 
 Better Player also exposes an Android-only helper that launches a dedicated FlutterActivity backed by a

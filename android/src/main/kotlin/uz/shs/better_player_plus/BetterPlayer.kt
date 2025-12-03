@@ -534,6 +534,17 @@ internal class BetterPlayer(
         exoPlayer?.playWhenReady = false
     }
 
+    fun notifyPlayStateChange(isPlaying: Boolean) {
+        val event: MutableMap<String, Any?> = HashMap()
+        event["event"] = if (isPlaying) "play" else "pause"
+        key?.let { event["key"] = it }
+        eventSink.success(event)
+    }
+
+    fun isPlaying(): Boolean {
+        return exoPlayer?.isPlaying == true
+    }
+
     fun setLooping(value: Boolean) {
         exoPlayer?.repeatMode = if (value) Player.REPEAT_MODE_ALL else Player.REPEAT_MODE_OFF
     }

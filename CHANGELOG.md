@@ -4,6 +4,7 @@
 * Exposed `BetterPlayerController.showPictureInPictureScreen()` to launch the PiP Activity
 * Updated example app with `pipMain` entry-point, cached engine setup, and PiP demo UI
 * Documented the new Android PiP workflow and bumped plugin version
+* Added a system Play/Pause control to the Android PiP window and wired its presses to Flutter `play`/`pause` events
 
 ## 1.1.5
 

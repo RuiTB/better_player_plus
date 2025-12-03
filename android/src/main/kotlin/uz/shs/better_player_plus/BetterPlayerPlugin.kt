@@ -4,10 +4,15 @@
 package uz.shs.better_player_plus
 
 import android.app.Activity
+import android.app.PendingIntent
 import android.app.PictureInPictureParams
+import android.app.RemoteAction
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -46,6 +51,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
+    private var currentPipPlayer: BetterPlayer? = null
+    private var pipActionReceiver: BroadcastReceiver? = null
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         val loader = FlutterLoader()
         flutterState = FlutterState(
@@ -85,11 +92,19 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         activity = binding.activity
     }
 
-    override fun onDetachedFromActivityForConfigChanges() {}
+    override fun onDetachedFromActivityForConfigChanges() {
+        currentPipPlayer?.let { completePictureInPictureSession(it) }
+        activity = null
+    }
 
-    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {}
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        activity = binding.activity
+    }
 
-    override fun onDetachedFromActivity() {}
+    override fun onDetachedFromActivity() {
+        currentPipPlayer?.let { completePictureInPictureSession(it) }
+        activity = null
+    }
 
     @UnstableApi
     private fun disposeAllPlayers() {
@@ -185,11 +200,13 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             PLAY_METHOD -> {
                 setupNotification(player)
                 player.play()
+                refreshPictureInPictureActionsIfNeeded(player)
                 result.success(null)
             }
 
             PAUSE_METHOD -> {
                 player.pause()
+                refreshPictureInPictureActionsIfNeeded(player)
                 result.success(null)
             }
 
@@ -482,38 +499,161 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     }
 
     private fun enablePictureInPicture(player: BetterPlayer) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            player.setupMediaSession(flutterState!!.applicationContext)
-            activity!!.enterPictureInPictureMode(PictureInPictureParams.Builder().setAspectRatio(
-                Rational(16, 9)
-            ).build())
-            startPictureInPictureListenerTimer(player)
-            player.onPictureInPictureStatusChanged(true)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
         }
+        val hostActivity = activity ?: return
+        currentPipPlayer = player
+        player.setupMediaSession(flutterState!!.applicationContext)
+        registerPipActionReceiver()
+        hostActivity.enterPictureInPictureMode(buildPictureInPictureParams(player))
+        startPictureInPictureListenerTimer(player)
+        player.onPictureInPictureStatusChanged(true)
     }
 
     private fun disablePictureInPicture(player: BetterPlayer) {
         stopPipHandler()
-        activity!!.moveTaskToBack(false)
+        activity?.moveTaskToBack(false)
+        completePictureInPictureSession(player)
+    }
+
+    private fun startPictureInPictureListenerTimer(player: BetterPlayer) {
+        val handler = Handler(Looper.getMainLooper())
+        val runnable = object : Runnable {
+            override fun run() {
+                val hostActivity = activity
+                if (hostActivity?.isInPictureInPictureMode == true) {
+                    handler.postDelayed(this, 100)
+                } else {
+                    completePictureInPictureSession(player)
+                    stopPipHandler()
+                }
+            }
+        }
+        pipHandler = handler
+        pipRunnable = runnable
+        handler.post(runnable)
+    }
+
+    private fun completePictureInPictureSession(player: BetterPlayer) {
+        if (currentPipPlayer == player) {
+            unregisterPipActionReceiver()
+            currentPipPlayer = null
+        }
         player.onPictureInPictureStatusChanged(false)
         player.disposeMediaSession()
     }
 
-    private fun startPictureInPictureListenerTimer(player: BetterPlayer) {
-        pipHandler = Handler(Looper.getMainLooper())
-        pipRunnable = Runnable {
-            if (activity!!.isInPictureInPictureMode) {
-                pipHandler!!.postDelayed(pipRunnable!!, 100)
-            } else {
-                player.onPictureInPictureStatusChanged(false)
-                player.disposeMediaSession()
-                stopPipHandler()
-            }
+    private fun refreshPictureInPictureActionsIfNeeded(player: BetterPlayer) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
         }
-        pipHandler!!.post(pipRunnable!!)
+        val hostActivity = activity ?: return
+        if (currentPipPlayer != player || !hostActivity.isInPictureInPictureMode) {
+            return
+        }
+        try {
+            hostActivity.setPictureInPictureParams(buildPictureInPictureParams(player))
+        } catch (exception: Exception) {
+            Log.w(TAG, "Failed to refresh PiP actions", exception)
+        }
+    }
+
+    private fun buildPictureInPictureParams(player: BetterPlayer): PictureInPictureParams {
+        val builder = PictureInPictureParams.Builder().setAspectRatio(Rational(16, 9))
+        val playPauseAction = buildPlayPauseAction(player)
+        if (playPauseAction != null) {
+            builder.setActions(listOf(playPauseAction))
+        }
+        return builder.build()
+    }
+
+    private fun buildPlayPauseAction(player: BetterPlayer): RemoteAction? {
+        val hostActivity = activity ?: return null
+        val isPlaying = player.isPlaying()
+        val action: String
+        val iconRes: Int
+        val labelRes: Int
+        val requestCode: Int
+        if (isPlaying) {
+            action = PIP_ACTION_PAUSE
+            iconRes = android.R.drawable.ic_media_pause
+            labelRes = R.string.better_player_pip_pause
+            requestCode = PIP_REQUEST_CODE_PAUSE
+        } else {
+            action = PIP_ACTION_PLAY
+            iconRes = android.R.drawable.ic_media_play
+            labelRes = R.string.better_player_pip_play
+            requestCode = PIP_REQUEST_CODE_PLAY
+        }
+        val intent = Intent(action).setPackage(hostActivity.packageName)
+        val pendingIntent = PendingIntent.getBroadcast(
+            hostActivity,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val label = hostActivity.getString(labelRes)
+        return RemoteAction(
+            Icon.createWithResource(hostActivity, iconRes),
+            label,
+            label,
+            pendingIntent
+        )
+    }
+
+    private fun registerPipActionReceiver() {
+        if (pipActionReceiver != null) {
+            return
+        }
+        val hostActivity = activity ?: return
+        val receiver = PipActionReceiver()
+        val filter = IntentFilter().apply {
+            addAction(PIP_ACTION_PLAY)
+            addAction(PIP_ACTION_PAUSE)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hostActivity.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            hostActivity.registerReceiver(receiver, filter)
+        }
+        pipActionReceiver = receiver
+    }
+
+    private fun unregisterPipActionReceiver() {
+        val receiver = pipActionReceiver ?: return
+        try {
+            activity?.unregisterReceiver(receiver)
+        } catch (exception: Exception) {
+            Log.w(TAG, "PiP action receiver unregistration failed", exception)
+        } finally {
+            pipActionReceiver = null
+        }
+    }
+
+    private inner class PipActionReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val player = currentPipPlayer ?: return
+            when (intent?.action) {
+                PIP_ACTION_PLAY -> {
+                    setupNotification(player)
+                    player.play()
+                    player.notifyPlayStateChange(true)
+                }
+                PIP_ACTION_PAUSE -> {
+                    player.pause()
+                    player.notifyPlayStateChange(false)
+                }
+                else -> return
+            }
+            refreshPictureInPictureActionsIfNeeded(player)
+        }
     }
 
     private fun dispose(player: BetterPlayer, textureId: Long) {
+        if (currentPipPlayer == player) {
+            completePictureInPictureSession(player)
+        }
         player.dispose()
         videoPlayers.remove(textureId)
         dataSources.remove(textureId)
@@ -557,6 +697,10 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
     companion object {
         private const val TAG = "BetterPlayerPlugin"
+        private const val PIP_ACTION_PLAY = "uz.shs.better_player_plus.action.PIP_PLAY"
+        private const val PIP_ACTION_PAUSE = "uz.shs.better_player_plus.action.PIP_PAUSE"
+        private const val PIP_REQUEST_CODE_PLAY = 7001
+        private const val PIP_REQUEST_CODE_PAUSE = 7002
         private const val CHANNEL = "better_player_channel"
         private const val EVENTS_CHANNEL = "better_player_channel/videoEvents"
         private const val DATA_SOURCE_PARAMETER = "dataSource"
