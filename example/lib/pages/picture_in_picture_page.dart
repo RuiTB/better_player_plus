@@ -21,12 +21,6 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
       aspectRatio: 16 / 9,
       fit: BoxFit.contain,
       pipRequiresLinearPlayback: true,
-      eventListener: (BetterPlayerEvent event) {
-        if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
-          print('progress: ${event.parameters?['progress']}');
-        }
-      },
-      fullScreenByDefault: true,
       deviceOrientationsAfterFullScreen: [
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
@@ -43,7 +37,7 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
     );
     final BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
-      'https://dy35qflylzlrr.cloudfront.net/course-videos/1ca87b1a-def5-41ec-ae3c-2eaf18ac69be/AppleHLS1/b20fdefa-6622-41ca-9a3f-d0680f47b518.m3u8',
+      'https://dy35qflylzlrr.cloudfront.net/course-videos/3cb2be8f-f384-4581-8093-4da5756de602/AppleHLS1/a4400920-0bde-491b-80ca-7d56c2389e34.m3u8',
       cacheConfiguration: BetterPlayerCacheConfiguration(useCache: false),
       bufferingConfiguration: BetterPlayerBufferingConfiguration(
         minBufferMs: 5000,
@@ -55,6 +49,7 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     _betterPlayerController.setBetterPlayerGlobalKey(_betterPlayerKey);
+    _betterPlayerController.setMixWithOthers(true);
     super.initState();
   }
 
@@ -74,8 +69,14 @@ class _PictureInPicturePageState extends State<PictureInPicturePage> {
         ),
         ElevatedButton(
           child: const Text('Show PiP'),
-          onPressed: () {
+          onPressed: () async {
+            if (!(await _betterPlayerController.isPictureInPictureSupported())) {
+              return;
+            }
             _betterPlayerController.enablePictureInPicture(_betterPlayerKey);
+            if (Platform.isIOS) {
+              Navigator.of(context).pop();
+            }
           },
         ),
         ElevatedButton(
