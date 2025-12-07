@@ -517,8 +517,10 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                let window = windowScene.windows.first,
                let rootVC = window.rootViewController {
-                layer.frame = frame
+                layer.frame = CGRect(x: 0, y: 0, width: 0.1, height: 0.1)
                 layer.needsDisplayOnBoundsChange = true
+                layer.opacity = 0.01
+                layer.isHidden = false
                 rootVC.view.layer.addSublayer(layer)
                 rootVC.view.layer.needsDisplayOnBoundsChange = true
                 playerLayerRef = layer
@@ -531,8 +533,10 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
         } else {
             if let window = UIApplication.shared.keyWindow ?? UIApplication.shared.windows.first,
                let rootVC = window.rootViewController {
-                layer.frame = frame
+                layer.frame = CGRect(x: 0, y: 0, width: 0.1, height: 0.1)
                 layer.needsDisplayOnBoundsChange = true
+                layer.opacity = 0.01
+                layer.isHidden = false
                 rootVC.view.layer.addSublayer(layer)
                 rootVC.view.layer.needsDisplayOnBoundsChange = true
                 playerLayerRef = layer
@@ -546,7 +550,7 @@ public class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, 
     }
 
     public func disablePictureInPicture() {
-        setPictureInPicture(true)
+        setPictureInPicture(false)
         if let layer = playerLayerRef {
             layer.removeFromSuperlayer()
             playerLayerRef = nil
